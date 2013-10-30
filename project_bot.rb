@@ -15,56 +15,75 @@ class ProjectBot
     run!
   end
 
+  def run!
+    until @socket.eof? do
+      msg = stream
+      puts msg
+      quit?(msg)
+      ping?(msg)
+      time?(msg)
+      user_join(msg) if msg.downcase.include? "join #{@channel}"
+    end
+  end
+
+  def stream
+    @socket.gets
+  end
+
+  def public_command_console(msg)
+    # This method will execute various internal commands we may want the bot to do, 
+  end
+
+  def private_command_console(msg)
+    # This method will execute various private commands like kick or message a user..
+  end
+
+  def options_settings(msg)
+    # this method will allow us to turn on an off various auto-settings of the bot, such as turning password check on and off.
+  end
+
+# MESSAGE METHODS
+
+  # Talk directly to the IRC server
   def say(msg)
     puts msg
     @socket.puts msg
   end
 
+  # Send a message to a particular room
   def chat(msg)
     say "PRIVMSG #{@channel} :#{msg}"
   end
 
+  # Send a private message to a particular server
   def private_message(user, msg)
     say("privmsg #{user} :#{msg}")
   end
 
-  def run!
-    until @socket.eof? do
-      respond_to! @socket.gets
-    end
-  end
+# REPOND METHODS
 
-  def respond_to!(msg)
-    puts msg
-    user_join(msg) if msg.downcase.include? "join #{@channel}"
-    quit?(msg)
-    ping?(msg)
-    time?(msg)
-  end
-
-  def quit?(msg)
-    # REDEFINE ME
-    # this method needs to accept a quit command only from an admin
-    # PARTINGS.each do |p|
-    #   @socket.puts "QUIT" if msg.include? p
-    #   @socket.close if msg.include? p
-    # end
-  end
-
+  # Respond to a ping
   def ping?(msg)
     ping = msg.include? "PING"
     return unless msg.strip().end_with? "PRIVMSG #{@channel} :!ProjectBot" or ping
     @socket.puts msg.gsub("PING", "PONG") if ping
   end
 
+  # Give the time
   def time?(msg)
     chat(Time.now) if msg.include? "time"
   end
 
-
-
-  def kick(user)
-    say "kick #{@channel} #{user} :And stay out!"
+# AUTOMATIC METHODS
+ 
+  def user_join(msg)
+    user = get_user_name(msg)
+    data = get_file("user_list.txt") 
+    unless data.include?(user)
+      kick(user)
+    else
+      password_check(user) unless user == @user
+    end
   end
 
   def password_check(user)
@@ -72,7 +91,7 @@ class ProjectBot
     counter = 0
       until counter == 10
         sleep 1
-        msg = @socket.gets
+        msg = stream
         say("1")
           if msg.include?(user) && msg.include?(PASSWORD)
             private_message(user, "Password validated.  Please enjoy your stay.")
@@ -85,26 +104,41 @@ class ProjectBot
     kick(user)
   end
 
-   def get_file(file)
+  def make_admin(user)
+    data = admin_list
+    say("mode #{@channel} +o #{user}") if data.include?(user)
+  end
+
+  def admin?(user)
+    admin_list.include?(user)
+  end
+
+# COMMAND METHODS
+
+  def kick(user)
+    say "kick #{@channel} #{user} :And stay out!"
+  end
+
+  def quit?(msg)
+    # REDEFINE ME
+    # this method needs to accept a quit command only from an admin
+    # PARTINGS.each do |p|
+    #   @socket.puts "QUIT" if msg.include? p
+    #   @socket.close if msg.include? p
+    # end
+  end
+
+# GET METHODS
+
+  def get_file(file)
     list = File.open(file, "r")
     data = list.read.split("\n")
     list.close
     data
   end
 
-  def make_admin(user)
-    data = get_file("admin_list.txt")
-    say("mode #{@channel} +o #{user}") if data.include?(user)
-  end
-
-  def user_join(msg)
-    user = get_user_name(msg)
-    data = get_file("user_list.txt") 
-    unless data.include?(user)
-      kick(user)
-    else
-      password_check(user) unless user == @user
-    end
+  def admin_list
+    get_file("admin_list.txt")
   end
 
   def get_user_name(msg)
