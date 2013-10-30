@@ -3,13 +3,13 @@ require 'cinch'
 
 class ProjectBot
   PARTINGS = %w(bye goodbye cya seeya quit)
-  PASSWORD = "pass"
+  PASSWORD = "friend"
 
   def initialize(server, port, channel)
     @channel = channel
     @socket= TCPSocket.open(server, port)
-    @user = "ProjectBot"
-    say "NICK #{@user}"
+    @nick = "ProjectBot"
+    say "NICK #{@nick}"
     say "USER ProjectBot 0 * ProjectBot"
     say "JOIN #{@channel}"
     run!
@@ -19,6 +19,7 @@ class ProjectBot
     until @socket.eof? do
       msg = stream
       puts msg
+      receive_private_message(msg)
       quit?(msg)
       ping?(msg)
       time?(msg)
@@ -34,8 +35,13 @@ class ProjectBot
     # This method will execute various internal commands we may want the bot to do, 
   end
 
-  def private_command_console(msg)
-    # This method will execute various private commands like kick or message a user..
+  def private_command_console(command, target)
+    case command.downcase
+    when "kick"
+      private_message(target, "Access revoked.")
+      kick(target)
+    end
+
   end
 
   def options_settings(msg)
@@ -60,6 +66,21 @@ class ProjectBot
     say("privmsg #{user} :#{msg}")
   end
 
+  def receive_private_message(msg)
+    if msg.include?("PRIVMSG #{@nick}")
+      sender = get_user_name(msg)
+      if admin?(sender)
+        private_message(sender, "Yes master. Your wish is my command.")
+        command = get_command(msg).split(/ /)
+        target = command[1]
+        command = command[0]
+        private_command_console(command, target)
+      else
+        private_message(sender, "Access denied.")
+      end
+    end
+  end
+
 # REPOND METHODS
 
   # Respond to a ping
@@ -82,14 +103,18 @@ class ProjectBot
     unless data.include?(user)
       kick(user)
     else
-      password_check(user) unless user == @user
+      if get_file("exception_list.txt").include?(user)
+        make_admin(user)
+      else
+        password_check(user) 
+      end
     end
   end
 
   def password_check(user)
-    private_message(user, "Please PM the password. 60 seconds and counting...")
+    private_message(user, "PM friend and enter. 60 seconds and counting...")
     counter = 0
-      until counter == 10
+      until counter == 60
         sleep 1
         msg = stream
         say("1")
@@ -142,12 +167,21 @@ class ProjectBot
   end
 
   def get_user_name(msg)
-    msg =~ /[:](.+)[!]/
+    msg =~ /^[:](\w+)[!]/
     user_joined = $~.to_s
     user_joined = user_joined.split('')
     user_joined.shift
     user_joined.pop
     user_joined = user_joined.join('')
+  end
+
+  def get_command(msg)
+    msg =~ /[ ][:](.+)/
+    command = $~.to_s
+    command = command.split("")
+    command.shift
+    command.shift
+    command.join('')
   end
 
 end
