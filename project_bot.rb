@@ -35,13 +35,14 @@ class ProjectBot
     # This method will execute various internal commands we may want the bot to do, 
   end
 
-  def private_command_console(command, target)
+  def private_command_console(command, target, sender)
     case command.downcase
     when "kick"
       private_message(target, "Access revoked.")
       kick(target)
+    when "add_admin"
+      add_admin(target, sender)
     end
-
   end
 
   def options_settings(msg)
@@ -74,7 +75,7 @@ class ProjectBot
         command = get_command(msg).split(/ /)
         target = command[1]
         command = command[0]
-        private_command_console(command, target)
+        private_command_console(command, target, sender)
       else
         private_message(sender, "Access denied.")
       end
@@ -144,6 +145,16 @@ class ProjectBot
     say "kick #{@channel} #{user} :And stay out!"
   end
 
+  def add_admin(target, sender)
+    unless admin?(target)
+      append_file("admin_list.txt", target)
+      private_message(sender, "Command executed")
+    else
+      private_message(sender, "That user is already an admin")
+    end
+  end
+
+
   def quit?(msg)
     # REDEFINE ME
     # this method needs to accept a quit command only from an admin
@@ -154,6 +165,13 @@ class ProjectBot
   end
 
 # GET METHODS
+
+  def append_file(file, text)
+    list = File.open(file, "a")
+    list.write("\n#{text}")
+    list.close
+  end
+
 
   def get_file(file)
     list = File.open(file, "r")
