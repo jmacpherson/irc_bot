@@ -5,22 +5,27 @@ class VortexBot
   PARTINGS = %w(bye goodbye cya seeya quit)
   PASSWORD = "AbrAhAdAbrA"
 
-  def initialize(server=nil)
-    @nick = "VortexBot"
-    @channel = "#project89"
-    @server = server
+  def initialize(server, port, channel)
+    @channel = channel
+    @socket= TCPSocket.open(server, port)
+    say "NICK ProjectBot"
+    say "USER ProjectBot 0 * ProjectBot"
+    say "JOIN #{@channel}"
+    run!
+  end
+
+  def say(msg)
+    puts msg
+    @socket.puts msg
+  end
+
+  def chat(msg)
+    say "PRIVMSG #{@channel} :#{msg}"
   end
 
   def run!
-    openSocket! if @server.nil?
-
-    @server.puts "USER VortexBot 0 * Testing"
-    @server.puts "NICK #{@nick}"
-    @server.puts "JOIN #{@channel}"
-    @server.puts "PRIVMSG #{@channel} :Hi friends!"
-
-    until @server.eof? do
-      respond_to! @server.gets
+    until @socket.eof? do
+      respond_to! @socket.gets
     end
   end
 
@@ -32,42 +37,52 @@ class VortexBot
     time?(msg)
   end
 
+  #response methods
+
   def quit?(msg)
     PARTINGS.each do |p|
-      @server.puts "QUIT" if msg.include? p
-      @server.close if msg.include? p
+      @socket.puts "QUIT" if msg.include? p
+      @socket.close if msg.include? p
     end
   end
 
   def ping?(msg)
     ping = msg.include? "PING"
     return unless msg.strip().end_with? "PRIVMSG #{@channel} :!vortexbot" or ping
-    @server.puts msg.gsub("PING", "PONG") if ping
+    @socket.puts msg.gsub("PING", "PONG") if ping
   end
 
   def time?(msg)
-    message(Time.now) if msg.include? "time"
+    chat(Time.now) if msg.include? "time"
   end
 
+  # private
+
   def new_user?(msg)
+    user = get_user_name(msg)
+    list = File.open("user_list.txt", "r")
+    data = list.read.split("\n")
+    puts data.include?(user)
+
+
+    # list = user_list.read
+    # user_list.close
+    # chat list.class
+    # chat list
+
+  end
+
+  def get_user_name(msg)
     msg =~ /[:](.+)[!]/
-    user_joined = $~
+    user_joined = $~.to_s
     user_joined = user_joined.split('')
     user_joined.shift
     user_joined.pop
     user_joined = user_joined.join('')
-    message "#{user_joined}"
   end
 
-  def message(content)
-    @server.puts "PRIVMSG #{@channel} :#{content}"
-  end
-
-  def openSocket!
-    host = "chat.freenode.net"
-    port = "6667"
-    @server = TCPSocket.open(host, port)
-  end
 end
 
-VortexBot.new.run!
+
+
+VortexBot.new("chat.freenode.net", 6667, "#project89")
