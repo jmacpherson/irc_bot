@@ -8,9 +8,11 @@ class EButlerBot
   def initialize(server, port, channel)
     @channel = channel
     @socket= TCPSocket.open(server, port)
-    say "NICK eButlerBot"
+    @nick = "JarvisEButlerBot"
+    say "NICK #{@nick}"
     say "USER eButlerBot 0 * eButlerBot"
     say "JOIN #{@channel}"
+    chat "How may I be of service to you today, young masters?"
     run!
   end
 
@@ -45,13 +47,15 @@ class EButlerBot
   end
 
   def ping?(msg)
-    ping = msg.include? "PING"
+    ping = msg.downcase.include? "ping"
     return unless ping
-    say(msg.gsub("PING", "PONG")) if ping
+    msg =~ /[:].+/
+    msg = $~.to_s
+    chat(msg.downcase.gsub("ping", "PONG")) if ping
   end
 
   def time?(msg)
-    say(Time.now) if msg.include? "time"
+    chat(Time.now) if msg.include? "time"
   end
 
   def new_user?(msg)
@@ -61,7 +65,7 @@ class EButlerBot
     user_joined.shift
     user_joined.pop
     user_joined = user_joined.join('')
-    say "#{user_joined}"
+    chat "Introducing the distinguished, #{user_joined}." unless user_joined == @nick
   end
 end
 
