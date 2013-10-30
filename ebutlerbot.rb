@@ -51,7 +51,7 @@ class EButlerBot
     return unless ping
     msg =~ /[:].+/
     msg = $~.to_s
-    chat(msg.downcase.gsub("ping", "PONG")) if ping
+    say(msg.downcase.gsub("ping", "PONG")) if ping
   end
 
   def time?(msg)
@@ -59,7 +59,7 @@ class EButlerBot
   end
 
   def new_user?(msg)
-    msg =~ /[:](.+)[!]/
+    msg =~ /^[:](\w+)[!]/
     user_joined = $~.to_s
     user_joined = user_joined.split('')
     user_joined.shift
