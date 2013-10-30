@@ -5,22 +5,27 @@ class EButlerBot
   PARTINGS = %w(bye goodbye cya seeya quit)
   PASSWORD = "AbrAhAdAbrA"
 
-  def initialize(server=nil)
-    @nick = "eButlerBot"
-    @channel = "#project89"
-    @server = server
+  def initialize(server, port, channel)
+    @channel = channel
+    @socket= TCPSocket.open(server, port)
+    say "NICK eButlerBot"
+    say "USER eButlerBot 0 * eButlerBot"
+    say "JOIN #{@channel}"
+    run!
+  end
+
+  def say(msg)
+    puts msg
+    @socket.puts msg
+  end
+
+  def chat(msg)
+    say "PRIVMSG #{@channel} :#{msg}"
   end
 
   def run!
-    openSocket! if @server.nil?
-
-    @server.puts "USER eButlerBot 0 * eButlerBot"
-    @server.puts "NICK #{@nick}"
-    @server.puts "JOIN #{@channel}"
-    @server.puts "PRIVMSG #{@channel} :Hi friends!"
-
-    until @server.eof? do
-      respond_to! @server.gets
+    until @socket.eof? do
+      respond_to! @socket.gets
     end
   end
 
@@ -70,4 +75,4 @@ class EButlerBot
   end
 end
 
-VortexBot.new.run!
+EButlerBot.new("chat.freenode.net", 6667, "#project89")
