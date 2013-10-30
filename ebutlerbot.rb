@@ -39,19 +39,19 @@ class EButlerBot
 
   def quit?(msg)
     PARTINGS.each do |p|
-      @server.puts "QUIT" if msg.include? p
-      @server.close if msg.include? p
+      say "QUIT" if msg.include? p
+      @socket.close if msg.include? p
     end
   end
 
   def ping?(msg)
     ping = msg.include? "PING"
-    return unless msg.strip().end_with? "PRIVMSG #{@channel} :!vortexbot" or ping
-    @server.puts msg.gsub("PING", "PONG") if ping
+    return unless ping
+    say(msg.gsub("PING", "PONG")) if ping
   end
 
   def time?(msg)
-    message(Time.now) if msg.include? "time"
+    say(Time.now) if msg.include? "time"
   end
 
   def new_user?(msg)
@@ -61,17 +61,7 @@ class EButlerBot
     user_joined.shift
     user_joined.pop
     user_joined = user_joined.join('')
-    message "#{user_joined}"
-  end
-
-  def message(content)
-    @server.puts "PRIVMSG #{@channel} :#{content}"
-  end
-
-  def openSocket!
-    host = "chat.freenode.net"
-    port = "6667"
-    @server = TCPSocket.open(host, port)
+    say "#{user_joined}"
   end
 end
 
