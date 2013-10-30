@@ -40,10 +40,11 @@ class VortexBot
   #response methods
 
   def quit?(msg)
-    PARTINGS.each do |p|
-      @socket.puts "QUIT" if msg.include? p
-      @socket.close if msg.include? p
-    end
+    # I need to be rewritten so I am called via a private message
+    # PARTINGS.each do |p|
+    #   @socket.puts "QUIT" if msg.include? p
+    #   @socket.close if msg.include? p
+    # end
   end
 
   def ping?(msg)
