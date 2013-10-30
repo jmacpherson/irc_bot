@@ -8,8 +8,8 @@ class VortexBot
   def initialize(server, port, channel)
     @channel = channel
     @socket= TCPSocket.open(server, port)
-    say "NICK ProjectBot"
-    say "USER ProjectBot 0 * ProjectBot"
+    say "NICK AdminMaker"
+    say "USER AdminMaker 0 * AdminMaker"
     say "JOIN #{@channel}"
     run!
   end
@@ -31,10 +31,10 @@ class VortexBot
 
   def respond_to!(msg)
     puts msg
-    new_user?(msg) if msg.downcase.include? "join #{@channel}"
+    new_user(msg) if msg.downcase.include? "join #{@channel}"
     quit?(msg)
     ping?(msg)
-    time?(msg)
+
   end
 
   #response methods
@@ -52,18 +52,29 @@ class VortexBot
     @socket.puts msg.gsub("PING", "PONG") if ping
   end
 
-  def time?(msg)
-    chat(Time.now) if msg.include? "time"
-  end
-
   # private
 
-  def new_user?(msg)
-    user = get_user_name(msg)
-    list = File.open("user_list.txt", "r")
+  def get_file(file)
+    list = File.open(file, "r")
     data = list.read.split("\n")
-    puts data.include?(user)
+    list.close
+    data
+  end
 
+  def admin(user)
+    data = get_file("admin_list.txt")
+    say("mode #{@channel} +o #{user}") if data.include?(user)
+  end
+
+  def new_user(msg)
+    user = get_user_name(msg)
+    admin(user)
+    data = get_file("user_list.txt") 
+    # if data.include?(user)
+    #   DO SOMETHING
+    # else
+    #   DO SOMETHING ELSE
+    # end
   end
 
   def get_user_name(msg)
