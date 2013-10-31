@@ -1,1 +1,0 @@
-web: bundle exec ruby project_bot.rb -p $PORT
