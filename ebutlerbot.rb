@@ -1,5 +1,4 @@
 require 'socket'
-require 'cinch'
 
 class EButlerBot
   PARTINGS = %w(bye goodbye cya seeya quit)
