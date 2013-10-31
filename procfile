@@ -1,1 +1,1 @@
-web: bash exec ruby project_bot.rb -p $PORT
+bash: exec ruby project_bot.rb -p $PORT
