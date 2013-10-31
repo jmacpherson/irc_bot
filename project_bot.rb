@@ -1,5 +1,4 @@
 require 'socket'
-require 'cinch'
 
 class ProjectBot
   PARTINGS = %w(bye goodbye cya seeya quit)
